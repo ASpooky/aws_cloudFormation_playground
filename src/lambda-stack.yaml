@@ -4,7 +4,7 @@ Description: Lambda 関数・IAM ロール・S3 バケットを作成するス�
 Parameters:
   TemplateBucketName:
     Type: String
-    Description: ネストスタックのテンプレート(iam-policy.yaml)を格納する S3 バケット名
+    Description: ネストスタックのテンプレートと Lambda コードを格納する S3 バケット名
 
 Resources:
   S3:
@@ -19,7 +19,7 @@ Resources:
   IamPolicyStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub "https://${TemplateBucketName}.s3.amazonaws.com/templates/iam-policy.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/templates/iam-policy.yaml"
 
   MylambdaRole:
     Type: AWS::IAM::Role
@@ -43,5 +43,24 @@ Resources:
       Handler: index.handler
       Runtime: nodejs22.x
       Code:
-        S3Bucket: !Ref S3
+        S3Bucket: !Sub "${TemplateBucketName}"
         S3Key: lambda/my-func.zip
+
+  MyFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !Ref Lambda
+      AuthType: NONE
+
+  LambdaFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Lambda
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+Outputs:
+  FunctionUrl:
+    Description: Lambda Function URL
+    Value: !GetAtt MyFunctionUrl.FunctionUrl

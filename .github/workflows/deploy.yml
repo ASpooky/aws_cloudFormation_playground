@@ -51,7 +51,14 @@ jobs:
         run: |
           aws s3 cp src/iam-policy.yaml "s3://${DEPLOY_BUCKET}/templates/iam-policy.yaml"
 
-      # ③ CloudFormation スタックをデプロイ
+      # ③ Lambda コードを zip 化して S3 にアップロード
+      - name: Package and upload Lambda code
+        run: |
+          cd src/lambda
+          zip -r my-func.zip index.js
+          aws s3 cp my-func.zip "s3://${DEPLOY_BUCKET}/lambda/my-func.zip"
+
+      # ④ CloudFormation スタックをデプロイ
       - name: Deploy lambda-stack.yaml
         run: |
           aws cloudformation deploy \
@@ -61,9 +68,9 @@ jobs:
             --parameter-overrides \
               TemplateBucketName="${DEPLOY_BUCKET}"
 
-      - name: Show stack status
+      - name: Show stack outputs
         run: |
           aws cloudformation describe-stacks \
             --stack-name "${STACK_NAME}" \
-            --query "Stacks[0].{Status:StackStatus,Updated:LastUpdatedTime}" \
+            --query "Stacks[0].{Status:StackStatus,Outputs:Outputs}" \
             --output table
