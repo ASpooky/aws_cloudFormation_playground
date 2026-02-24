@@ -1,0 +1,69 @@
+name: Deploy Lambda Stack
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      DEPLOY_BUCKET: ${{ vars.DEPLOY_BUCKET_NAME }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      STACK_NAME: ${{ vars.CFN_STACK_NAME }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # ① デプロイ用 S3 バケットの確認・作成
+      - name: Ensure deploy bucket exists
+        run: |
+          if aws s3api head-bucket --bucket "${DEPLOY_BUCKET}" 2>/dev/null; then
+            echo "Bucket already exists: ${DEPLOY_BUCKET}"
+          else
+            echo "Creating bucket: ${DEPLOY_BUCKET}"
+            aws s3api create-bucket \
+              --bucket "${DEPLOY_BUCKET}" \
+              --region "${AWS_REGION}" \
+              --create-bucket-configuration LocationConstraint="${AWS_REGION}"
+
+            aws s3api put-bucket-versioning \
+              --bucket "${DEPLOY_BUCKET}" \
+              --versioning-configuration Status=Enabled
+
+            echo "Bucket created: ${DEPLOY_BUCKET}"
+          fi
+
+      # ② iam-policy.yaml を S3 にアップロード（常に最新で上書き）
+      - name: Upload iam-policy.yaml to S3
+        run: |
+          aws s3 cp src/iam-policy.yaml "s3://${DEPLOY_BUCKET}/templates/iam-policy.yaml"
+
+      # ③ CloudFormation スタックをデプロイ
+      - name: Deploy lambda-stack.yaml
+        run: |
+          aws cloudformation deploy \
+            --template-file src/lambda-stack.yaml \
+            --stack-name "${STACK_NAME}" \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              TemplateBucketName="${DEPLOY_BUCKET}"
+
+      - name: Show stack status
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name "${STACK_NAME}" \
+            --query "Stacks[0].{Status:StackStatus,Updated:LastUpdatedTime}" \
+            --output table
