@@ -16,8 +16,5 @@ jobs:
       - name: Install cfn-lint
         run: pip install cfn-lint
 
-      - name: Lint iam-policy.yaml
-        run: cfn-lint src/iam-policy.yaml
-
-      - name: Lint lambda-stack.yaml
-        run: cfn-lint src/lambda-stack.yaml
+      - name: Lint template.yaml
+        run: cfn-lint template.yaml --include-checks I
