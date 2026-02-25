@@ -38,15 +38,7 @@ jobs:
               --base main \
               --head development \
               --title "chore: promote development to main ($DATE)" \
-              --body "## 概要
-development ブランチの変更を main へ昇格させる定期 PR です。
-
-## チェックリスト
-- [ ] dev 環境でのデプロイが成功していること
-- [ ] 変更内容をレビュー済み
-
----
-🤖 GitHub Actions により自動作成されました。"
+              --body $'## 概要\ndevelopment ブランチの変更を main へ昇格させる定期 PR です。\n\n## チェックリスト\n- [ ] dev 環境でのデプロイが成功していること\n- [ ] 変更内容をレビュー済み\n\n---\n🤖 GitHub Actions により自動作成されました。'
           else
             echo "既存の open PR があるためスキップします"
           fi
