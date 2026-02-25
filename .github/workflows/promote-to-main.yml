@@ -1,4 +1,4 @@
-name: Promote development → main
+name: Promote develop → main
 
 on:
   schedule:
@@ -18,27 +18,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check if development is ahead of main
+      - name: Check if develop is ahead of main
         id: check
         run: |
           git fetch origin
-          AHEAD=$(git rev-list --count origin/main..origin/development 2>/dev/null || echo 0)
+          AHEAD=$(git rev-list --count origin/main..origin/develop 2>/dev/null || echo 0)
           echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
-          echo "development is ${AHEAD} commit(s) ahead of main"
+          echo "develop is ${AHEAD} commit(s) ahead of main"
 
-      - name: Create PR development → main
+      - name: Create PR develop → main
         if: steps.check.outputs.ahead != '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          EXISTING=$(gh pr list --base main --head development --state open --json number --jq length)
+          EXISTING=$(gh pr list --base main --head develop --state open --json number --jq length)
           if [ "$EXISTING" = "0" ]; then
             DATE=$(date +%Y-%m-%d)
             gh pr create \
               --base main \
-              --head development \
-              --title "chore: promote development to main ($DATE)" \
-              --body $'## 概要\ndevelopment ブランチの変更を main へ昇格させる定期 PR です。\n\n## チェックリスト\n- [ ] dev 環境でのデプロイが成功していること\n- [ ] 変更内容をレビュー済み\n\n---\n🤖 GitHub Actions により自動作成されました。'
+              --head develop \
+              --title "chore: promote develop to main ($DATE)" \
+              --body $'## 概要\ndevelop ブランチの変更を main へ昇格させる定期 PR です。\n\n## チェックリスト\n- [ ] dev 環境でのデプロイが成功していること\n- [ ] 変更内容をレビュー済み\n\n---\n🤖 GitHub Actions により自動作成されました。'
           else
             echo "既存の open PR があるためスキップします"
           fi
