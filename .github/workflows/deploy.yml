@@ -27,6 +27,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
       # ① デプロイ用 S3 バケットの確認・作成
       - name: Ensure deploy bucket exists
         run: |
@@ -46,27 +51,20 @@ jobs:
             echo "Bucket created: ${DEPLOY_BUCKET}"
           fi
 
-      # ② iam-policy.yaml を S3 にアップロード（常に最新で上書き）
-      - name: Upload iam-policy.yaml to S3
-        run: |
-          aws s3 cp src/iam-policy.yaml "s3://${DEPLOY_BUCKET}/templates/iam-policy.yaml"
+      # ② SAM ビルド（Lambda コードのパッケージングを自動実行）
+      - name: SAM Build
+        run: sam build
 
-      # ③ Lambda コードを zip 化して S3 にアップロード
-      - name: Package and upload Lambda code
+      # ③ SAM デプロイ（S3 アップロード・CFn デプロイを一括実行）
+      - name: SAM Deploy
         run: |
-          cd src/lambda
-          zip -r my-func.zip index.js
-          aws s3 cp my-func.zip "s3://${DEPLOY_BUCKET}/lambda/my-func.zip"
-
-      # ④ CloudFormation スタックをデプロイ
-      - name: Deploy lambda-stack.yaml
-        run: |
-          aws cloudformation deploy \
-            --template-file src/lambda-stack.yaml \
+          sam deploy \
             --stack-name "${STACK_NAME}" \
+            --s3-bucket "${DEPLOY_BUCKET}" \
             --capabilities CAPABILITY_NAMED_IAM \
-            --parameter-overrides \
-              TemplateBucketName="${DEPLOY_BUCKET}"
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --region "${AWS_REGION}"
 
       - name: Show stack outputs
         run: |

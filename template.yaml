@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda 関数・IAM ロール・S3 バケットを作成するスタック
+
+Resources:
+  MySampleBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: my-func
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: src/lambda/
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      FunctionUrlConfig:
+        AuthType: NONE
+
+Outputs:
+  FunctionUrl:
+    Description: Lambda Function URL
+    Value: !GetAtt MyFunctionUrl.FunctionUrl
