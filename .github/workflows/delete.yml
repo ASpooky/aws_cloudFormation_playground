@@ -2,11 +2,20 @@ name: Delete CloudFormation Stack
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 削除するスタックの環境
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - production
 
 jobs:
   delete:
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ inputs.environment }}
 
     env:
       STACK_NAME: ${{ vars.CFN_STACK_NAME }}

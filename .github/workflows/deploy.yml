@@ -4,12 +4,22 @@ on:
   push:
     branches:
       - main
+      - development
   workflow_dispatch:
+    inputs:
+      environment:
+        description: デプロイ先環境
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - production
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ (github.event_name == 'workflow_dispatch' && inputs.environment) || (github.ref_name == 'main' && 'production') || 'development' }}
 
     env:
       DEPLOY_BUCKET: ${{ vars.DEPLOY_BUCKET_NAME }}

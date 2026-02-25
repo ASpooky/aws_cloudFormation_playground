@@ -1,0 +1,52 @@
+name: Promote development → main
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 毎日 09:00 JST (UTC 0:00)
+  workflow_dispatch:
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if development is ahead of main
+        id: check
+        run: |
+          git fetch origin
+          AHEAD=$(git rev-list --count origin/main..origin/development 2>/dev/null || echo 0)
+          echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
+          echo "development is ${AHEAD} commit(s) ahead of main"
+
+      - name: Create PR development → main
+        if: steps.check.outputs.ahead != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          EXISTING=$(gh pr list --base main --head development --state open --json number --jq length)
+          if [ "$EXISTING" = "0" ]; then
+            DATE=$(date +%Y-%m-%d)
+            gh pr create \
+              --base main \
+              --head development \
+              --title "chore: promote development to main ($DATE)" \
+              --body "## 概要
+development ブランチの変更を main へ昇格させる定期 PR です。
+
+## チェックリスト
+- [ ] dev 環境でのデプロイが成功していること
+- [ ] 変更内容をレビュー済み
+
+---
+🤖 GitHub Actions により自動作成されました。"
+          else
+            echo "既存の open PR があるためスキップします"
+          fi
