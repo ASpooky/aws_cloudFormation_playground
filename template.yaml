@@ -14,7 +14,6 @@ Resources:
   MyFunctionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: my-func-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
