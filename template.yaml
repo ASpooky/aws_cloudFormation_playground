@@ -11,6 +11,20 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
+  MyFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: my-func-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
   MyFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -18,8 +32,7 @@ Resources:
       Handler: index.handler
       Runtime: nodejs22.x
       CodeUri: src/lambda/
-      Policies:
-        - AWSLambdaBasicExecutionRole
+      Role: !GetAtt MyFunctionRole.Arn
       FunctionUrlConfig:
         AuthType: NONE
 

@@ -68,9 +68,11 @@ jobs:
       # ③ SAM デプロイ（S3 アップロード・CFn デプロイを一括実行）
       - name: SAM Deploy
         run: |
+          DEPLOY_DATE=$(date +%Y-%m-%d)
           sam deploy \
             --stack-name "${STACK_NAME}" \
             --s3-bucket "${DEPLOY_BUCKET}" \
+            --s3-prefix "${DEPLOY_DATE}" \
             --capabilities CAPABILITY_NAMED_IAM \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
