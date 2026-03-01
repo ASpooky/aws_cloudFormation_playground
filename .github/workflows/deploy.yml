@@ -70,7 +70,7 @@ jobs:
       - name: SAM Deploy
         run: |
           DEPLOY_DATE=$(date +%Y-%m-%d)
-          STACK_NAME="${STACK_BASE_NAME}-${ENV_SUFFIX}"
+          STACK_NAME="${STACK_BASE_NAME}"
           sam deploy \
             --stack-name "${STACK_NAME}" \
             --s3-bucket "${DEPLOY_BUCKET}" \
@@ -83,7 +83,7 @@ jobs:
 
       - name: Show stack outputs
         run: |
-          STACK_NAME="${STACK_BASE_NAME}-${ENV_SUFFIX}"
+          STACK_NAME="${STACK_BASE_NAME}"
           aws cloudformation describe-stacks \
             --stack-name "${STACK_NAME}" \
             --query "Stacks[0].{Status:StackStatus,Outputs:Outputs}" \

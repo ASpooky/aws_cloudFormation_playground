@@ -46,4 +46,4 @@ Resources:
 Outputs:
   FunctionUrl:
     Description: Lambda Function URL
-    Value: !GetAtt MyFunction.FunctionUrl
+    Value: !GetAtt MyFunctionUrl.FunctionUrl
