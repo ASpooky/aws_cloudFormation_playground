@@ -64,7 +64,7 @@ jobs:
 
       # ② SAM ビルド（Lambda コードのパッケージングを自動実行）
       - name: SAM Build
-        run: sam build
+        run: sam build --template stacks/lambda/template.yaml
 
       # ③ SAM デプロイ（S3 アップロード・CFn デプロイを一括実行）
       - name: SAM Deploy
