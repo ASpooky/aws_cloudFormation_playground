@@ -38,7 +38,7 @@ Resources:
       FunctionName: !Sub "my-func-${Env}"
       Handler: index.handler
       Runtime: nodejs22.x
-      CodeUri: src/lambda/
+      CodeUri: ../../src/lambda/
       Role: !GetAtt MyFunctionRole.Arn
       FunctionUrlConfig:
         AuthType: NONE
