@@ -24,7 +24,8 @@ jobs:
     env:
       DEPLOY_BUCKET: ${{ vars.DEPLOY_BUCKET_NAME }}
       AWS_REGION: ${{ vars.AWS_REGION }}
-      STACK_NAME: ${{ vars.CFN_STACK_NAME }}
+      STACK_BASE_NAME: ${{ vars.CFN_STACK_NAME }}
+      ENV_SUFFIX: ${{ (github.event_name == 'workflow_dispatch' && inputs.environment == 'production') && 'prod' || (github.ref_name == 'main') && 'prod' || 'dev' }}
 
     steps:
       - name: Checkout
@@ -69,17 +70,20 @@ jobs:
       - name: SAM Deploy
         run: |
           DEPLOY_DATE=$(date +%Y-%m-%d)
+          STACK_NAME="${STACK_BASE_NAME}-${ENV_SUFFIX}"
           sam deploy \
             --stack-name "${STACK_NAME}" \
             --s3-bucket "${DEPLOY_BUCKET}" \
             --s3-prefix "${DEPLOY_DATE}" \
             --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides Env="${ENV_SUFFIX}" \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
             --region "${AWS_REGION}"
 
       - name: Show stack outputs
         run: |
+          STACK_NAME="${STACK_BASE_NAME}-${ENV_SUFFIX}"
           aws cloudformation describe-stacks \
             --stack-name "${STACK_NAME}" \
             --query "Stacks[0].{Status:StackStatus,Outputs:Outputs}" \
