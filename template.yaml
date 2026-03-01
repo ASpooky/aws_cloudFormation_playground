@@ -2,6 +2,14 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: Lambda 関数・IAM ロール・S3 バケットを作成するスタック
 
+Parameters:
+  Env:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+
 Resources:
   MySampleBucket:
     Type: AWS::S3::Bucket
@@ -27,7 +35,7 @@ Resources:
   MyFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: my-func
+      FunctionName: !Sub "my-func-${Env}"
       Handler: index.handler
       Runtime: nodejs22.x
       CodeUri: src/lambda/
@@ -38,4 +46,4 @@ Resources:
 Outputs:
   FunctionUrl:
     Description: Lambda Function URL
-    Value: !GetAtt MyFunctionUrl.FunctionUrl
+    Value: !GetAtt MyFunction.FunctionUrl
